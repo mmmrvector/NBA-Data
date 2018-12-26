@@ -90,6 +90,29 @@ def get_player_number_from_name(player_name):
     player_number = pattern.findall(player_number)[0]
     return player_number
 
+#由球队名获取球员编号，返回球员编号数组
+def get_player_numbers_from_team_name(team_name):
+    net_addr = "http://www.stat-nba.com/team/" + team_name + ".html"
+    url = urllib.parse.quote(net_addr, safe=string.printable)
+    data = get_response(url)
+    soup = BeautifulSoup(data, features="html.parser")
+    div = soup.select('#stat_box_team')[0]
+    table = div.select('.stat_box')[0]
+    player_numbers = []
+    for trs in table.select('tr'):
+        for td in trs.select('td'):
+            td_class_content = td.get('class')
+            if td_class_content != None and 'player_name' in td_class_content:
+                try:
+                    player_number = td.a.get('href')
+                    pattern = re.compile(r'/player/([0-9]+)\.html')
+                    player_number = pattern.findall(player_number)[0]
+                    player_numbers.append(int(player_number))
+                except(Exception):
+                    print("not player data")
+    return player_numbers
+
+
 '''''
 #写入csv文件
 headerss = ['season', 'tm', 'g', 'gs', 'mp', 'fgper', 'fg', 'fga', 'threepper', 'threep', 'threepa', 'ftper', 'ft', 'fta', 'trb', 'orb', 'drb', 'ast', 'stl', 'blk',
