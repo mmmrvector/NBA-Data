@@ -59,6 +59,22 @@ def get_player(player_number):
             class_row = player.avg_stat_row(row)
             rows.append(class_row)
     pp.avg_stats.append_rows(rows)
+
+    #获取球员进阶数据
+    rows = []
+    table = soup.find('table', id = 'stat_box_advanced_basic')
+    for trs in table.select('tr'):
+        row = []
+        for td in trs.select('td'):
+            td_class_content = td.get('class')
+            if td_class_content != None:
+                row.append(td.get_text())
+        if row != None and len(row) != 0:
+            # rows.append(row)
+            class_row = player.advanced_basic_row(row)
+            rows.append(class_row)
+    pp.advanced_basic_stats.append_rows(rows)
+
     return pp
 
 #由球员名字获取球员编号
