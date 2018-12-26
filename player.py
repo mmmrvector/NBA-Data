@@ -1,3 +1,5 @@
+import re
+
 '''
     season      赛季
     tm          队伍
