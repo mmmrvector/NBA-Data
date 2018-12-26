@@ -29,18 +29,19 @@ class avg_stat_row:
 
 
 '''
-球员平均数据
+球员场均数据
 '''
 class avg_stat:
     def __init__(self):
-        self.data = []
+        #常规赛数据
+        self.season_data = []
 
     def append_row(self, stat_row):
-        self.data.append(stat_row)
+        self.season_data.append(stat_row)
 
     def append_rows(self, stat_rows):
         for stat_row in stat_rows:
-            self.data.append(stat_row)
+            self.season_data.append(stat_row)
 
 
 '''
