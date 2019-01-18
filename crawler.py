@@ -18,10 +18,17 @@ def get_response(url):
 def get_player(player_number):
     pp = player.Player()
 
+    #常规赛数据
     net_addr = "http://www.stat-nba.com/player/" + str(player_number) + ".html"
     url = urllib.parse.quote(net_addr, safe=string.printable)
     data = get_response(url)
     soup = BeautifulSoup(data, features="html.parser")
+
+    #季后赛数据
+    net_addr2 = "http://www.stat-nba.com/player/stat_box/" + str(player_number) + "_playoff.html"
+    url2 = urllib.parse.quote(net_addr, safe=string.printable)
+    data2 = get_response(url2)
+    soup2 = BeautifulSoup(data2, features="html.parser")
 
     #获取球员基本信息
     player_info = soup.select('.playerinfo')
@@ -44,10 +51,15 @@ def get_player(player_number):
             pp.current_payment = row.get_text().replace(row_content, '')
             pattern = re.compile(r'([0-9]+)万美元')
             pp.current_payment = pattern.findall(pp.current_payment)[0]
-
-    #获取球员平均数据
+    '''
+    获取球员平均数据
+    '''
+    #获取球员常规赛平均数据
     rows = []
     table = soup.find('table', id = 'stat_box_avg')
+    if table == None:
+        print('no player data')
+        return None
     for trs in table.select('tr'):
         row = []
         for td in trs.select('td'):
@@ -59,8 +71,28 @@ def get_player(player_number):
             class_row = player.avg_stat_row(row)
             rows.append(class_row)
     pp.avg_stats.append_rows(rows)
+    #获取球员季后赛平均数据
+    rows = []
+    table = soup2.find('table', id='stat_box_avg')
+    if table == None:
+        print('no player data')
+        return None
+    for trs in table.select('tr'):
+        row = []
+        for td in trs.select('td'):
+            td_class_content = td.get('class')
+            if td_class_content != None:
+                row.append(td.get_text())
+        if row != None and len(row) != 0:
+            # rows.append(row)
+            class_row = player.avg_stat_row(row)
+            rows.append(class_row)
+    pp.avg_stats.append_playoff_rows(rows)
 
-    #获取球员进阶数据
+    '''
+    获取球员进阶数据
+    '''
+    #获取球员常规赛进阶数据
     rows = []
     table = soup.find('table', id = 'stat_box_advanced_basic')
     for trs in table.select('tr'):
@@ -74,6 +106,69 @@ def get_player(player_number):
             class_row = player.advanced_basic_row(row)
             rows.append(class_row)
     pp.advanced_basic_stats.append_rows(rows)
+    #获取球员季后赛进阶数据
+    rows = []
+    table = soup2.find('table', id='stat_box_advanced_basic')
+    for trs in table.select('tr'):
+        row = []
+        for td in trs.select('td'):
+            td_class_content = td.get('class')
+            if td_class_content != None:
+                row.append(td.get_text())
+        if row != None and len(row) != 0:
+            # rows.append(row)
+            class_row = player.advanced_basic_row(row)
+            rows.append(class_row)
+    pp.advanced_basic_stats.append_playoff_rows(rows)
+
+    '''
+    获取球员投篮数据
+    '''
+    #获取球员常规赛投篮数据
+    rows = []
+    table = soup.find('table', id='stat_box_advanced_shooting')
+    for trs in table.select('tr'):
+        row = []
+        for td in trs.select('td'):
+            td_class_content = td.get('class')
+            if td_class_content != None:
+                row.append(td.get_text())
+        if row != None and len(row) != 0:
+            # rows.append(row)
+            class_row = player.avg_shot_stat_row(row)
+            rows.append(class_row)
+    pp.advanced_shooting_stats.append_rows(rows)
+    # 获取球员季后赛投篮数据
+    rows = []
+    table = soup2.find('table', id='stat_box_advanced_shooting')
+    for trs in table.select('tr'):
+        row = []
+        for td in trs.select('td'):
+            td_class_content = td.get('class')
+            if td_class_content != None:
+                row.append(td.get_text())
+        if row != None and len(row) != 0:
+            # rows.append(row)
+            class_row = player.avg_shot_stat_row(row)
+            rows.append(class_row)
+    pp.advanced_shooting_stats.append_playoff_rows(rows)
+
+    #获取球员关键时刻数据
+    net_addr = "http://www.stat-nba.com/query_pbp.php?QueryType=allA&order=0&crtcol=player_id&TimeWay=5l&Player_id=" + str(player_number) + "&PageNum=20"
+    url = urllib.parse.quote(net_addr, safe=string.printable)
+    data = get_response(url)
+    soup = BeautifulSoup(data, features="html.parser")
+    row = []
+    table = soup.find('table')
+    if table == None:
+        return pp
+    for trs in table.select('tr'):
+        for td in trs.select('td'):
+            td_class_content = td.get('class')
+            if td_class_content != None:
+                row.append(td.get_text())
+    if row != None and len(row) != 0:
+        pp.key_time_stats = player.key_time_stat(row)
 
     return pp
 
@@ -109,7 +204,7 @@ def get_player_numbers_from_team_name(team_name):
                     player_number = pattern.findall(player_number)[0]
                     player_numbers.append(int(player_number))
                 except(Exception):
-                    print("not player data")
+                    print("")
     return player_numbers
 
 
